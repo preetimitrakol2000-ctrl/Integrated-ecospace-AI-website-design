@@ -1,0 +1,1091 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>EcoTrace AI — Carbon Intelligence Platform</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Syne:wght@400;500;700;800&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --ink:#07100e;--surface:#0e1614;--card:#131d1a;--card2:#192320;
+  --teal:#00d4a0;--teal2:#00a87e;--teal-dim:rgba(0,212,160,.08);--teal-border:rgba(0,212,160,.25);
+  --amber:#f5a623;--amber-dim:rgba(245,166,35,.08);--amber-border:rgba(245,166,35,.25);
+  --red:#ff5252;--red-dim:rgba(255,82,82,.08);--red-border:rgba(255,82,82,.25);
+  --blue:#4fa3ff;--blue-dim:rgba(79,163,255,.08);--blue-border:rgba(79,163,255,.25);
+  --purple:#b08cff;--purple-dim:rgba(176,140,255,.08);--purple-border:rgba(176,140,255,.25);
+  --muted:#7a9e98;--faint:rgba(255,255,255,.07);--faint2:rgba(255,255,255,.04);
+  --mono:'IBM Plex Mono',monospace;--sans:'Syne',sans-serif;
+  --sidebar:220px;
+}
+html,body{height:100%;background:var(--surface);color:#dff0ec;font-family:var(--sans);font-size:13px}
+a{color:inherit;text-decoration:none}
+button{cursor:pointer;font-family:var(--sans)}
+
+/* ── LAYOUT ── */
+.app{display:grid;grid-template-rows:52px 1fr;height:100vh;overflow:hidden}
+.topbar{grid-column:1/-1;display:flex;align-items:center;justify-content:space-between;padding:0 20px;background:var(--ink);border-bottom:1px solid var(--faint);z-index:10}
+.body{display:grid;grid-template-columns:var(--sidebar) 1fr;overflow:hidden}
+.sidebar{background:var(--ink);border-right:1px solid var(--faint);overflow-y:auto;display:flex;flex-direction:column}
+.content{overflow-y:auto;padding:20px}
+
+/* ── TOPBAR ── */
+.logo{display:flex;align-items:center;gap:9px}
+.logo-hex{width:26px;height:26px;background:var(--teal);clip-path:polygon(50% 0%,100% 25%,100% 75%,50% 100%,0% 75%,0% 25%);display:flex;align-items:center;justify-content:center}
+.logo-text{font-size:15px;font-weight:800;color:#fff;letter-spacing:-.3px}
+.logo-text em{color:var(--teal);font-style:normal}
+.topbar-center{display:flex;align-items:center;gap:6px}
+.chain-step{display:flex;align-items:center;gap:5px;font-family:var(--mono);font-size:10px;color:var(--muted);padding:3px 9px;border:1px solid var(--faint);border-radius:3px}
+.chain-step.active{color:var(--teal);border-color:var(--teal-border);background:var(--teal-dim)}
+.chain-arrow{color:var(--faint);font-size:10px}
+.topbar-right{display:flex;align-items:center;gap:10px}
+.pill-live{display:flex;align-items:center;gap:5px;font-family:var(--mono);font-size:10px;color:var(--teal);padding:4px 10px;border:1px solid var(--teal-border);border-radius:3px}
+.dot{width:5px;height:5px;border-radius:50%;background:var(--teal);animation:blink 1.6s ease-in-out infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.25}}
+.pill-chain{font-family:var(--mono);font-size:10px;color:var(--muted);padding:4px 10px;border:1px solid var(--faint);border-radius:3px}
+.btn-offset{background:var(--teal);color:var(--ink);font-weight:800;font-size:11px;border:none;border-radius:4px;padding:7px 14px;letter-spacing:.3px;transition:opacity .15s}
+.btn-offset:hover{opacity:.85}
+.user-ava{width:28px;height:28px;border-radius:50%;background:var(--teal-dim);border:1px solid var(--teal-border);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(--teal)}
+
+/* ── SIDEBAR ── */
+.nav-section{margin-bottom:4px}
+.nav-label{font-family:var(--mono);font-size:9px;color:var(--muted);letter-spacing:1.4px;padding:14px 16px 6px;text-transform:uppercase}
+.nav-item{display:flex;align-items:center;gap:9px;padding:8px 16px;color:#7a9e98;font-size:12px;font-weight:500;cursor:pointer;transition:all .12s;border-left:2px solid transparent;user-select:none}
+.nav-item i{font-size:15px;flex-shrink:0}
+.nav-item:hover{color:#dff0ec;background:var(--faint2)}
+.nav-item.active{color:var(--teal);border-left-color:var(--teal);background:var(--teal-dim)}
+.nav-badge{margin-left:auto;font-family:var(--mono);font-size:9px;padding:1px 6px;border-radius:10px}
+.nav-badge.red{background:var(--red-dim);color:var(--red)}
+.nav-badge.teal{background:var(--teal-dim);color:var(--teal)}
+.sidebar-score{margin:auto 12px 12px;background:var(--teal-dim);border:1px solid var(--teal-border);border-radius:8px;padding:12px}
+.ss-label{font-family:var(--mono);font-size:9px;color:var(--teal);letter-spacing:.8px;text-transform:uppercase;margin-bottom:6px}
+.ss-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:8px}
+.ss-item{text-align:center}
+.ss-val{font-size:18px;font-weight:800;color:#fff}
+.ss-sub{font-family:var(--mono);font-size:9px;color:var(--muted)}
+.ss-bar-wrap{height:4px;background:rgba(255,255,255,.1);border-radius:2px}
+.ss-bar{height:4px;border-radius:2px;background:var(--teal);transition:width .5s ease}
+
+/* ── CARDS / PANELS ── */
+.panel{background:var(--card);border:1px solid var(--faint);border-radius:9px;padding:16px}
+.panel-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:13px}
+.panel-title{font-size:12px;font-weight:700;color:#dff0ec}
+.panel-sub{font-family:var(--mono);font-size:9px;color:var(--muted)}
+.panel-action{background:none;border:none;font-family:var(--mono);font-size:10px;color:var(--teal);cursor:pointer;padding:0}
+.panel-action:hover{text-decoration:underline}
+
+.page-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:18px}
+.page-title{font-size:20px;font-weight:800;color:#fff;letter-spacing:-.4px}
+.page-sub{font-family:var(--mono);font-size:10px;color:var(--muted);margin-top:3px}
+
+/* ── METRIC CARDS ── */
+.metrics-grid{display:grid;gap:10px;margin-bottom:16px}
+.metrics-grid.cols4{grid-template-columns:repeat(4,1fr)}
+.metrics-grid.cols3{grid-template-columns:repeat(3,1fr)}
+.mc{background:var(--card);border:1px solid var(--faint);border-radius:8px;padding:13px 14px;border-top:2px solid transparent;transition:border-color .2s}
+.mc.teal{border-top-color:var(--teal)}
+.mc.amber{border-top-color:var(--amber)}
+.mc.red{border-top-color:var(--red)}
+.mc.blue{border-top-color:var(--blue)}
+.mc.purple{border-top-color:var(--purple)}
+.mc-lbl{font-family:var(--mono);font-size:9px;color:var(--muted);letter-spacing:.7px;text-transform:uppercase;margin-bottom:6px}
+.mc-val{font-size:22px;font-weight:800;color:#fff;line-height:1}
+.mc-val .unit{font-size:11px;color:var(--muted);font-weight:500}
+.mc-delta{font-family:var(--mono);font-size:10px;margin-top:3px}
+.up{color:var(--red)}
+.dn{color:var(--teal)}
+
+/* ── TABLES / ROWS ── */
+.row-item{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--faint);cursor:pointer;transition:padding-left .1s}
+.row-item:last-child{border-bottom:none}
+.row-item:hover{padding-left:5px}
+.ri-icon{width:30px;height:30px;border-radius:6px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:14px}
+.ri-info{flex:1;min-width:0}
+.ri-name{font-size:12px;font-weight:500;color:#dff0ec;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ri-sub{font-family:var(--mono);font-size:10px;color:var(--muted)}
+.ri-bar-wrap{height:3px;background:var(--faint);border-radius:2px;margin-top:4px}
+.ri-bar{height:3px;border-radius:2px}
+.ri-right{text-align:right;flex-shrink:0}
+.ri-val{font-family:var(--mono);font-size:12px;font-weight:500}
+.ri-score{font-family:var(--mono);font-size:10px;color:var(--muted);margin-top:1px}
+
+/* ── ALERT ITEMS ── */
+.alert-item{display:flex;gap:10px;padding:9px 0;border-bottom:1px solid var(--faint)}
+.alert-item:last-child{border-bottom:none}
+.ai-icon{width:28px;height:28px;border-radius:6px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:13px}
+.ai-text{font-size:11px;color:#b8d0cb;line-height:1.5}
+.ai-time{font-family:var(--mono);font-size:9px;color:var(--muted);margin-top:2px}
+
+/* ── BLOCKCHAIN ROWS ── */
+.bc-row{display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid var(--faint);font-family:var(--mono);font-size:10px}
+.bc-row:last-child{border-bottom:none}
+.bc-nft{width:28px;height:28px;border-radius:5px;border:1px solid var(--teal-border);background:var(--teal-dim);display:flex;align-items:center;justify-content:center;font-size:12px;flex-shrink:0}
+.bc-hash{color:var(--teal);max-width:90px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bc-tag{padding:2px 6px;border-radius:3px;font-size:9px}
+.verified{background:var(--teal-dim);color:var(--teal)}
+.pending{background:var(--amber-dim);color:var(--amber)}
+
+/* ── SCORE BANNER ── */
+.score-banner{display:grid;grid-template-columns:auto 1fr auto;gap:18px;align-items:center;background:var(--card);border:1px solid var(--faint);border-radius:9px;padding:16px 18px;margin-bottom:16px}
+.score-ring{width:70px;height:70px;border-radius:50%;border:3px solid currentColor;display:flex;flex-direction:column;align-items:center;justify-content:center;flex-shrink:0}
+.score-ring .n{font-size:22px;font-weight:800;line-height:1}
+.score-ring .l{font-family:var(--mono);font-size:9px;color:var(--muted)}
+.sb-mid h3{font-size:14px;font-weight:800;color:#fff;margin-bottom:3px}
+.sb-mid p{font-size:11px;color:var(--muted);font-family:var(--mono)}
+.sb-right{text-align:right}
+.sb-deduct{font-size:20px;font-weight:800;color:var(--red)}
+.sb-lbl{font-family:var(--mono);font-size:9px;color:var(--muted);margin-top:1px}
+.sb-recover{font-size:14px;font-weight:700;color:var(--teal);margin-top:6px}
+
+/* ── SCORE CALC TABLE ── */
+.calc-row{display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid var(--faint)}
+.calc-row:last-child{border-bottom:none}
+.calc-lbl{flex:1;font-size:11px;color:var(--muted);font-family:var(--mono)}
+.calc-bar-wrap{width:140px;height:5px;background:var(--faint);border-radius:3px;flex-shrink:0}
+.calc-bar{height:5px;border-radius:3px}
+.calc-pts{font-family:var(--mono);font-size:11px;font-weight:500;text-align:right;width:50px;flex-shrink:0}
+
+/* ── OPT CARDS ── */
+.opt-card{background:var(--card2);border:1px solid var(--faint);border-radius:7px;padding:11px 12px;margin-bottom:8px}
+.opt-card:last-child{margin-bottom:0}
+.opt-hdr{display:flex;align-items:center;gap:8px;margin-bottom:5px}
+.opt-icon{width:22px;height:22px;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:12px;flex-shrink:0}
+.opt-title{font-size:12px;font-weight:700;color:#dff0ec;flex:1}
+.opt-badge{font-family:var(--mono);font-size:9px;padding:2px 7px;border-radius:3px}
+.opt-desc{font-size:11px;color:var(--muted);line-height:1.5;margin-bottom:5px}
+.opt-stats{display:flex;gap:12px}
+.opt-stat{font-family:var(--mono);font-size:9px;color:var(--muted)}
+.opt-stat span{color:#dff0ec}
+.opt-btn{background:none;border:1px solid var(--teal-border);color:var(--teal);font-family:var(--mono);font-size:9px;padding:3px 9px;border-radius:3px;float:right;margin-top:5px;transition:all .15s}
+.opt-btn:hover{background:var(--teal);color:var(--ink)}
+
+/* ── TAB BAR ── */
+.tabs{display:flex;gap:3px;background:var(--ink);border-radius:6px;padding:3px;margin-bottom:14px}
+.tab{flex:1;padding:6px 8px;text-align:center;font-size:10px;font-weight:700;font-family:var(--mono);cursor:pointer;border-radius:4px;color:var(--muted);transition:all .15s;border:none;background:none;letter-spacing:.3px}
+.tab.active{background:var(--teal-dim);color:var(--teal);border:1px solid var(--teal-border)}
+.tab-pane{display:none}
+.tab-pane.active{display:block}
+
+/* ── GRIDS ── */
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px}
+.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:12px}
+.g-main{display:grid;grid-template-columns:1fr 320px;gap:12px;margin-bottom:12px}
+
+/* ── SECTION DIVIDER ── */
+.section-div{display:flex;align-items:center;gap:10px;margin:18px 0 12px}
+.section-div-line{flex:1;height:1px;background:var(--faint)}
+.section-div-label{font-family:var(--mono);font-size:10px;color:var(--muted);letter-spacing:1px;text-transform:uppercase;padding:3px 10px;border:1px solid var(--faint);border-radius:3px;white-space:nowrap}
+
+/* ── COPILOT ── */
+.copilot-bar{display:flex;align-items:center;gap:10px;padding:10px 20px;background:var(--ink);border-top:1px solid var(--faint);flex-shrink:0}
+.copilot-label{font-family:var(--mono);font-size:10px;color:var(--teal);display:flex;align-items:center;gap:5px;white-space:nowrap}
+.copilot-input{flex:1;background:var(--card);border:1px solid var(--faint);border-radius:5px;padding:8px 12px;font-family:var(--sans);font-size:12px;color:#dff0ec;outline:none;transition:border-color .15s}
+.copilot-input:focus{border-color:var(--teal-border)}
+.copilot-input::placeholder{color:var(--muted)}
+.btn-ask{background:none;border:1px solid var(--teal-border);color:var(--teal);font-family:var(--mono);font-size:10px;padding:7px 12px;border-radius:4px;transition:all .15s;white-space:nowrap}
+.btn-ask:hover{background:var(--teal);color:var(--ink)}
+.copilot-resp{margin:10px 0 0;padding:10px 14px;background:var(--teal-dim);border:1px solid var(--teal-border);border-radius:6px;font-size:11px;color:#a0e8d8;line-height:1.6;display:none}
+.copilot-resp.show{display:block;animation:fadeUp .25s ease}
+@keyframes fadeUp{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
+
+/* ── SIMULATE ── */
+.sim-check{display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid var(--faint);cursor:pointer;font-size:11px;color:#dff0ec}
+.sim-check:last-child{border-bottom:none}
+.sim-check input{accent-color:var(--teal)}
+.sim-tag{margin-left:auto;font-family:var(--mono);font-size:9px;color:var(--teal)}
+
+/* ── LEGEND ── */
+.legend{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:8px}
+.legend-item{display:flex;align-items:center;gap:4px;font-size:10px;color:var(--muted)}
+.legend-dot{width:8px;height:8px;border-radius:2px;flex-shrink:0}
+
+/* ── PAGE VIEWS ── */
+.page-view{display:none}
+.page-view.active{display:block}
+
+/* ── SCROLLBAR ── */
+::-webkit-scrollbar{width:4px;height:4px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--faint);border-radius:2px}
+
+/* OVERALL SCORE BANNER */
+.master-banner{background:linear-gradient(135deg,rgba(0,212,160,.06),rgba(79,163,255,.04));border:1px solid var(--teal-border);border-radius:9px;padding:16px 18px;margin-bottom:16px;display:grid;grid-template-columns:1fr 1fr 1fr auto;gap:16px;align-items:center}
+.mb-seg{text-align:center}
+.mb-val{font-size:28px;font-weight:800}
+.mb-lbl{font-family:var(--mono);font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;margin-top:2px}
+.mb-bar-wrap{height:5px;background:rgba(255,255,255,.08);border-radius:3px;margin-top:8px}
+.mb-bar{height:5px;border-radius:3px;transition:width .6s ease}
+.mb-divider{width:1px;background:var(--faint);align-self:stretch}
+</style>
+</head>
+<body>
+<div class="app">
+
+<!-- TOPBAR -->
+<header class="topbar">
+  <div class="logo">
+    <div class="logo-hex"></div>
+    <span class="logo-text">Eco<em>Trace</em> AI</span>
+  </div>
+  <div class="topbar-center">
+    <div class="chain-step active"><i class="ti ti-package" aria-hidden="true"></i>Raw Materials</div>
+    <div class="chain-arrow">›</div>
+    <div class="chain-step active"><i class="ti ti-building-factory" aria-hidden="true"></i>Manufacturing</div>
+    <div class="chain-arrow">›</div>
+    <div class="chain-step active"><i class="ti ti-ship" aria-hidden="true"></i>Shipping</div>
+    <div class="chain-arrow">›</div>
+    <div class="chain-step"><i class="ti ti-home" aria-hidden="true"></i>End of Life</div>
+  </div>
+  <div class="topbar-right">
+    <div class="pill-live"><div class="dot"></div>LIVE INGESTION</div>
+    <div class="pill-chain">Polygon L2 · #4,182,931</div>
+    <button class="btn-offset" onclick="openCopilot('I want to offset our current emissions. Show carbon credit options, cost, and projected impact.')">⚡ Offset Emissions</button>
+    <div class="user-ava">EQ</div>
+  </div>
+</header>
+
+<div class="body">
+<!-- SIDEBAR -->
+<nav class="sidebar" aria-label="Main navigation">
+  <div class="nav-section">
+    <div class="nav-label">Platform</div>
+    <div class="nav-item active" onclick="showPage('overview')"><i class="ti ti-layout-dashboard" aria-hidden="true"></i>Overview</div>
+  </div>
+  <div class="nav-section">
+    <div class="nav-label">Supply Chain</div>
+    <div class="nav-item" onclick="showPage('supply')"><i class="ti ti-hierarchy" aria-hidden="true"></i>Chain Nodes</div>
+    <div class="nav-item" onclick="showPage('shipping')"><i class="ti ti-ship" aria-hidden="true"></i>Shipping Routes</div>
+  </div>
+  <div class="nav-section">
+    <div class="nav-label">Industrial</div>
+    <div class="nav-item" onclick="showPage('industrial')"><i class="ti ti-building-factory" aria-hidden="true"></i>Process Emissions</div>
+    <div class="nav-item" onclick="showPage('optimize')"><i class="ti ti-settings-automation" aria-hidden="true"></i>Optimizations</div>
+  </div>
+  <div class="nav-section">
+    <div class="nav-label">Intelligence</div>
+    <div class="nav-item" onclick="showPage('predictions')"><i class="ti ti-chart-line" aria-hidden="true"></i>ML Predictions</div>
+    <div class="nav-item" onclick="showPage('compliance')"><i class="ti ti-shield-check" aria-hidden="true"></i>Blockchain Ledger</div>
+    <div class="nav-item" onclick="showPage('alerts')"><i class="ti ti-bell" aria-hidden="true"></i>Alerts <span class="nav-badge red">5</span></div>
+    <div class="nav-item" onclick="showPage('simulate')"><i class="ti ti-adjustments-horizontal" aria-hidden="true"></i>Simulator</div>
+  </div>
+  <div class="nav-section">
+    <div class="nav-label">Settings</div>
+    <div class="nav-item"><i class="ti ti-file-certificate" aria-hidden="true"></i>Audit Reports</div>
+    <div class="nav-item"><i class="ti ti-settings" aria-hidden="true"></i>Configuration</div>
+  </div>
+  <div class="sidebar-score">
+    <div class="ss-label">Unified Carbon Score</div>
+    <div class="ss-grid">
+      <div class="ss-item">
+        <div class="ss-val" id="sidebar-score">74</div>
+        <div class="ss-sub">Overall</div>
+      </div>
+      <div class="ss-item">
+        <div class="ss-val" style="color:var(--red)">−26</div>
+        <div class="ss-sub">Deductions</div>
+      </div>
+    </div>
+    <div class="ss-bar-wrap"><div class="ss-bar" id="sidebar-bar" style="width:74%"></div></div>
+  </div>
+</nav>
+
+<!-- MAIN CONTENT -->
+<main class="content" id="mainContent">
+
+<!-- ══════════════════════ OVERVIEW PAGE ══════════════════════ -->
+<div class="page-view active" id="page-overview">
+  <div class="page-header">
+    <div>
+      <div class="page-title">Carbon Intelligence Hub</div>
+      <div class="page-sub">Scope 1 · 2 · 3 · Supply Chain · Industrial Process · Real-time · Tamper-proof</div>
+    </div>
+    <div style="font-family:var(--mono);font-size:10px;color:var(--muted);padding:5px 11px;border:1px solid var(--faint);border-radius:3px;display:flex;align-items:center;gap:5px"><i class="ti ti-calendar" aria-hidden="true"></i>Q2 2026 · May 1–28</div>
+  </div>
+
+  <!-- MASTER UNIFIED SCORE -->
+  <div class="master-banner">
+    <div class="mb-seg">
+      <div class="mb-val" style="color:var(--red)" id="master-score">74</div>
+      <div class="mb-lbl">Unified Score</div>
+      <div class="mb-bar-wrap"><div class="mb-bar" style="width:74%;background:var(--red)" id="master-bar"></div></div>
+    </div>
+    <div class="mb-divider"></div>
+    <div class="mb-seg">
+      <div class="mb-val" style="color:var(--amber)">84</div>
+      <div class="mb-lbl">Supply Chain Score</div>
+      <div class="mb-bar-wrap"><div class="mb-bar" style="width:84%;background:var(--amber)"></div></div>
+    </div>
+    <div class="mb-divider"></div>
+    <div class="mb-seg">
+      <div class="mb-val" style="color:var(--red)">62</div>
+      <div class="mb-lbl">Industrial Score</div>
+      <div class="mb-bar-wrap"><div class="mb-bar" style="width:62%;background:var(--red)"></div></div>
+    </div>
+    <div style="text-align:right">
+      <div style="font-family:var(--mono);font-size:9px;color:var(--muted)">Potential recovery</div>
+      <div style="font-size:22px;font-weight:800;color:var(--teal)">+30 pts</div>
+      <div style="font-family:var(--mono);font-size:9px;color:var(--muted);margin-top:3px">with all optimizations</div>
+    </div>
+  </div>
+
+  <!-- TOP METRICS -->
+  <div class="metrics-grid cols4">
+    <div class="mc teal">
+      <div class="mc-lbl">Total CO₂e</div>
+      <div class="mc-val">20,820<span class="unit"> t</span></div>
+      <div class="mc-delta dn">↓ 6.1% vs Q1</div>
+    </div>
+    <div class="mc amber">
+      <div class="mc-lbl">Supply Chain</div>
+      <div class="mc-val">12,480<span class="unit"> t</span></div>
+      <div class="mc-delta dn">↓ 8.3% vs Q1</div>
+    </div>
+    <div class="mc red">
+      <div class="mc-lbl">Industrial Process</div>
+      <div class="mc-val">8,340<span class="unit"> t</span></div>
+      <div class="mc-delta up">↑ 2.1% flagged</div>
+    </div>
+    <div class="mc blue">
+      <div class="mc-lbl">Credits Locked</div>
+      <div class="mc-val">3,200<span class="unit"> t</span></div>
+      <div class="mc-delta" style="color:var(--blue)">48 NFTs on-chain</div>
+    </div>
+  </div>
+
+  <div class="g-main">
+    <!-- Forecast chart -->
+    <div class="panel">
+      <div class="panel-hdr">
+        <span class="panel-title">Unified emissions forecast — XGBoost model</span>
+        <button class="panel-action" onclick="openCopilot('Break down the emissions forecast by source category and recommend the highest-ROI reduction action')">Drill down ↗</button>
+      </div>
+      <div class="legend">
+        <div class="legend-item"><div class="legend-dot" style="background:#00d4a0"></div>Supply chain actual</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#ff5252"></div>Industrial actual</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#f5a623;border:1px dashed #f5a623"></div>Combined forecast</div>
+      </div>
+      <div style="position:relative;width:100%;height:200px">
+        <canvas id="forecastChart" role="img" aria-label="Line chart: supply chain actual Jan-May, industrial actual Jan-May, combined forecast May-Jun">Supply chain: 2100, 2300, 2050, 1980, 2100. Industrial: 1450, 1500, 1380, 1420, 1380. Forecast June: 3700.</canvas>
+      </div>
+    </div>
+    <!-- Right column -->
+    <div style="display:flex;flex-direction:column;gap:12px">
+      <!-- Scope breakdown donut -->
+      <div class="panel" style="flex:1">
+        <div class="panel-hdr"><span class="panel-title">Emissions by scope</span></div>
+        <div class="legend">
+          <div class="legend-item"><div class="legend-dot" style="background:#00d4a0"></div>S1 12%</div>
+          <div class="legend-item"><div class="legend-dot" style="background:#4fa3ff"></div>S2 15%</div>
+          <div class="legend-item"><div class="legend-dot" style="background:#ff5252"></div>S3 Ship 33%</div>
+          <div class="legend-item"><div class="legend-dot" style="background:#f5a623"></div>S3 Mat 20%</div>
+          <div class="legend-item"><div class="legend-dot" style="background:#b08cff"></div>Ind 20%</div>
+        </div>
+        <div style="position:relative;width:100%;height:130px">
+          <canvas id="scopeChart" role="img" aria-label="Donut chart: Scope 1 12%, Scope 2 15%, Scope 3 shipping 33%, Scope 3 materials 20%, Industrial 20%">S1 12%, S2 15%, S3 Ship 33%, S3 Mat 20%, Industrial 20%</canvas>
+        </div>
+      </div>
+      <!-- Active alerts quick view -->
+      <div class="panel" style="flex:0">
+        <div class="panel-hdr">
+          <span class="panel-title">Active alerts</span>
+          <button class="panel-action" onclick="showPage('alerts')">View all ↗</button>
+        </div>
+        <div class="alert-item">
+          <div class="ai-icon" style="background:var(--red-dim);color:var(--red)"><i class="ti ti-flame" aria-hidden="true"></i></div>
+          <div><div class="ai-text">Maersk SEA→EU route 2.3× above CO₂ threshold</div><div class="ai-time">2 min ago · Critical</div></div>
+        </div>
+        <div class="alert-item">
+          <div class="ai-icon" style="background:var(--red-dim);color:var(--red)"><i class="ti ti-building-factory" aria-hidden="true"></i></div>
+          <div><div class="ai-text">Furnace combustion intensity 40% above target</div><div class="ai-time">18 min ago · Critical</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section-div"><div class="section-div-line"></div><div class="section-div-label">Supply Chain Overview</div><div class="section-div-line"></div></div>
+
+  <div class="g2">
+    <div class="panel">
+      <div class="panel-hdr"><span class="panel-title">Supply chain nodes</span><button class="panel-action" onclick="showPage('supply')">Full view ↗</button></div>
+      <div class="row-item" onclick="openCopilot('Analyze the carbon risk of the Foxconn Shenzhen supply node and suggest improvements')">
+        <div class="ri-icon" style="background:var(--teal-dim);color:var(--teal)"><i class="ti ti-building" aria-hidden="true"></i></div>
+        <div class="ri-info"><div class="ri-name">Foxconn Mfg — Shenzhen</div><div class="ri-sub">Assembly · Tier 1</div><div class="ri-bar-wrap"><div class="ri-bar" style="width:82%;background:var(--teal)"></div></div></div>
+        <div class="ri-right"><div class="ri-val" style="color:var(--teal)">82</div><div class="ri-score">Low risk</div></div>
+      </div>
+      <div class="row-item" onclick="openCopilot('What are the main carbon risks for Vale Mining Carajas and how can we switch to greener alternatives?')">
+        <div class="ri-icon" style="background:var(--amber-dim);color:var(--amber)"><i class="ti ti-pick" aria-hidden="true"></i></div>
+        <div class="ri-info"><div class="ri-name">Vale Mining — Carajás</div><div class="ri-sub">Raw Materials · Tier 2</div><div class="ri-bar-wrap"><div class="ri-bar" style="width:54%;background:var(--amber)"></div></div></div>
+        <div class="ri-right"><div class="ri-val" style="color:var(--amber)">54</div><div class="ri-score">Med risk</div></div>
+      </div>
+      <div class="row-item" onclick="openCopilot('How can we reroute the Maersk SEA to EU shipping lane to reduce emissions by 15% or more?')">
+        <div class="ri-icon" style="background:var(--red-dim);color:var(--red)"><i class="ti ti-ship" aria-hidden="true"></i></div>
+        <div class="ri-info"><div class="ri-name">Maersk Route SEA→EU</div><div class="ri-sub">Shipping · Scope 3</div><div class="ri-bar-wrap"><div class="ri-bar" style="width:31%;background:var(--red)"></div></div></div>
+        <div class="ri-right"><div class="ri-val" style="color:var(--red)">31</div><div class="ri-score">High risk</div></div>
+      </div>
+      <div class="row-item">
+        <div class="ri-icon" style="background:var(--teal-dim);color:var(--teal)"><i class="ti ti-truck" aria-hidden="true"></i></div>
+        <div class="ri-info"><div class="ri-name">DHL Last-Mile EU</div><div class="ri-sub">Distribution · Scope 3</div><div class="ri-bar-wrap"><div class="ri-bar" style="width:76%;background:var(--teal)"></div></div></div>
+        <div class="ri-right"><div class="ri-val" style="color:var(--teal)">76</div><div class="ri-score">Low risk</div></div>
+      </div>
+    </div>
+    <div class="panel">
+      <div class="panel-hdr"><span class="panel-title">Blockchain ledger</span><button class="panel-action" onclick="showPage('compliance')">Full view ↗</button></div>
+      <div class="bc-row">
+        <div class="bc-nft"><i class="ti ti-coin" style="color:var(--teal);font-size:13px" aria-hidden="true"></i></div>
+        <div style="flex:1;min-width:0"><div class="bc-hash">0x3f9a…c21e</div><div style="color:var(--muted);font-size:9px">Batch #4821 · 240 tCO₂e · Supply Chain</div></div>
+        <div class="bc-tag verified">VERIFIED</div>
+      </div>
+      <div class="bc-row">
+        <div class="bc-nft"><i class="ti ti-coin" style="color:var(--teal);font-size:13px" aria-hidden="true"></i></div>
+        <div style="flex:1;min-width:0"><div class="bc-hash">0x8b2d…f50a</div><div style="color:var(--muted);font-size:9px">Batch #4820 · 188 tCO₂e · Industrial</div></div>
+        <div class="bc-tag verified">VERIFIED</div>
+      </div>
+      <div class="bc-row">
+        <div class="bc-nft"><i class="ti ti-coin" style="color:var(--amber);font-size:13px" aria-hidden="true"></i></div>
+        <div style="flex:1;min-width:0"><div class="bc-hash" style="color:var(--amber)">0x1c7f…9d3b</div><div style="color:var(--muted);font-size:9px">Batch #4819 · 312 tCO₂e · Furnace</div></div>
+        <div class="bc-tag pending">PENDING</div>
+      </div>
+      <div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--faint);font-family:var(--mono);font-size:9px;color:var(--muted)">
+        Last block: <span style="color:var(--teal)">#4,182,931</span> · 2s ago · Polygon L2
+      </div>
+    </div>
+  </div>
+
+  <div class="section-div"><div class="section-div-line"></div><div class="section-div-label">Industrial Process Overview</div><div class="section-div-line"></div></div>
+
+  <div class="metrics-grid cols4">
+    <div class="mc red">
+      <div class="mc-lbl">Industrial CO₂e</div>
+      <div class="mc-val">8,340<span class="unit"> t</span></div>
+      <div class="mc-delta up">−13 pts on score</div>
+    </div>
+    <div class="mc amber">
+      <div class="mc-lbl">Combustion</div>
+      <div class="mc-val">3,120<span class="unit"> t</span></div>
+      <div class="mc-delta" style="color:var(--amber)">Furnaces, boilers</div>
+    </div>
+    <div class="mc purple">
+      <div class="mc-lbl">Fugitive</div>
+      <div class="mc-val">1,890<span class="unit"> t</span></div>
+      <div class="mc-delta" style="color:var(--purple)">CH₄ leaks · 21× GWP</div>
+    </div>
+    <div class="mc blue">
+      <div class="mc-lbl">Chemical Process</div>
+      <div class="mc-val">2,180<span class="unit"> t</span></div>
+      <div class="mc-delta" style="color:var(--blue)">Cement, steel</div>
+    </div>
+  </div>
+
+  <div class="g2">
+    <div class="panel">
+      <div class="panel-hdr"><span class="panel-title">Industrial emission sources</span><button class="panel-action" onclick="showPage('industrial')">Full view ↗</button></div>
+      <div class="row-item" onclick="showPage('industrial')">
+        <div class="ri-icon" style="background:var(--red-dim);color:var(--red)"><i class="ti ti-flame" aria-hidden="true"></i></div>
+        <div class="ri-info"><div class="ri-name">High-temp furnace combustion</div><div class="ri-sub">Natural gas · Scope 1 direct</div><div class="ri-bar-wrap"><div class="ri-bar" style="width:90%;background:var(--red)"></div></div></div>
+        <div class="ri-right"><div class="ri-val" style="color:var(--red)">1,840t</div><div class="ri-score">−9 pts</div></div>
+      </div>
+      <div class="row-item" onclick="showPage('industrial')">
+        <div class="ri-icon" style="background:var(--amber-dim);color:var(--amber)"><i class="ti ti-building-factory" aria-hidden="true"></i></div>
+        <div class="ri-info"><div class="ri-name">Cement clinker production</div><div class="ri-sub">CaCO₃ calcination · Chemical</div><div class="ri-bar-wrap"><div class="ri-bar" style="width:74%;background:var(--amber)"></div></div></div>
+        <div class="ri-right"><div class="ri-val" style="color:var(--amber)">1,280t</div><div class="ri-score">−7 pts</div></div>
+      </div>
+      <div class="row-item" onclick="showPage('industrial')">
+        <div class="ri-icon" style="background:var(--purple-dim);color:var(--purple)"><i class="ti ti-eye-off" aria-hidden="true"></i></div>
+        <div class="ri-info"><div class="ri-name">Fugitive methane leaks</div><div class="ri-sub">Valves, flanges · 21× GWP</div><div class="ri-bar-wrap"><div class="ri-bar" style="width:60%;background:var(--purple)"></div></div></div>
+        <div class="ri-right"><div class="ri-val" style="color:var(--purple)">890t</div><div class="ri-score">−6 pts</div></div>
+      </div>
+      <div class="row-item" onclick="showPage('industrial')">
+        <div class="ri-icon" style="background:var(--amber-dim);color:var(--amber)"><i class="ti ti-droplet" aria-hidden="true"></i></div>
+        <div class="ri-info"><div class="ri-name">Steam boiler inefficiency</div><div class="ri-sub">Coal/gas fired · Scope 1</div><div class="ri-bar-wrap"><div class="ri-bar" style="width:52%;background:var(--amber)"></div></div></div>
+        <div class="ri-right"><div class="ri-val" style="color:var(--amber)">740t</div><div class="ri-score">−5 pts</div></div>
+      </div>
+    </div>
+    <div class="panel">
+      <div class="panel-hdr"><span class="panel-title">Industrial score deductions</span><button class="panel-action" onclick="showPage('simulate')">Simulate ↗</button></div>
+      <div style="position:relative;width:100%;height:180px">
+        <canvas id="deductChart" role="img" aria-label="Horizontal bar chart of deductions by source: Furnace 9pts, Cement 7pts, Fugitive 6pts, Boiler 5pts, EAF 5pts, Refrigerant 4pts, Wastewater 2pts">Furnace -9, Cement -7, Fugitive -6, Boiler -5, EAF -5, Refrigerant -4, Wastewater -2</canvas>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════ SUPPLY CHAIN PAGE ══════════════════════ -->
+<div class="page-view" id="page-supply">
+  <div class="page-header">
+    <div><div class="page-title">Supply Chain Nodes</div><div class="page-sub">Tier 1 · Tier 2 · Scope 3 upstream · Real-time scoring</div></div>
+  </div>
+  <div class="metrics-grid cols3">
+    <div class="mc teal"><div class="mc-lbl">Supply Chain Score</div><div class="mc-val" style="color:var(--amber)">84<span class="unit">/100</span></div><div class="mc-delta dn">↑ +6 pts this quarter</div></div>
+    <div class="mc amber"><div class="mc-lbl">Scope 3 Risk</div><div class="mc-val">67<span class="unit">%</span></div><div class="mc-delta up">↑ 2.1% upstream</div></div>
+    <div class="mc red"><div class="mc-lbl">High-risk Nodes</div><div class="mc-val">2<span class="unit"> nodes</span></div><div class="mc-delta up">Maersk + Vale flagged</div></div>
+  </div>
+  <div class="g2">
+    <div class="panel">
+      <div class="panel-hdr"><span class="panel-title">All supply chain nodes</span><span class="panel-sub">click to get AI recommendations</span></div>
+      <div class="row-item" onclick="openCopilot('Analyze Foxconn Shenzhen Tier 1 assembly node carbon score of 82. What keeps it green and how to push it to 90+?')">
+        <div class="ri-icon" style="background:var(--teal-dim);color:var(--teal)"><i class="ti ti-building" aria-hidden="true"></i></div>
+        <div class="ri-info"><div class="ri-name">Foxconn Mfg — Shenzhen</div><div class="ri-sub">Assembly · Tier 1 · 1,240 tCO₂e</div><div class="ri-bar-wrap"><div class="ri-bar" style="width:82%;background:var(--teal)"></div></div></div>
+        <div class="ri-right"><div class="ri-val" style="color:var(--teal)">82</div><div class="ri-score">Low risk</div></div>
+      </div>
+      <div class="row-item" onclick="openCopilot('Vale Mining Carajas has a score of 54 with 68% coal energy mix. What certified green suppliers could replace them and what would the carbon savings be?')">
+        <div class="ri-icon" style="background:var(--amber-dim);color:var(--amber)"><i class="ti ti-pick" aria-hidden="true"></i></div>
+        <div class="ri-info"><div class="ri-name">Vale Mining — Carajás</div><div class="ri-sub">Raw Materials · Tier 2 · 2,100 tCO₂e</div><div class="ri-bar-wrap"><div class="ri-bar" style="width:54%;background:var(--amber)"></div></div></div>
+        <div class="ri-right"><div class="ri-val" style="color:var(--amber)">54</div><div class="ri-score">Med risk</div></div>
+      </div>
+      <div class="row-item" onclick="openCopilot('Maersk SEA to EU shipping route scores 31 and is 2.3x above CO2 threshold. Give me 3 alternative routing options with estimated tCO2e savings for each.')">
+        <div class="ri-icon" style="background:var(--red-dim);color:var(--red)"><i class="ti ti-ship" aria-hidden="true"></i></div>
+        <div class="ri-info"><div class="ri-name">Maersk Route SEA→EU</div><div class="ri-sub">Shipping · Scope 3 · 3,800 tCO₂e</div><div class="ri-bar-wrap"><div class="ri-bar" style="width:31%;background:var(--red)"></div></div></div>
+        <div class="ri-right"><div class="ri-val" style="color:var(--red)">31</div><div class="ri-score">High risk ⚠</div></div>
+      </div>
+      <div class="row-item" onclick="openCopilot('DHL last mile EU distribution scores 76. What electrification initiatives or route optimization can push this above 85?')">
+        <div class="ri-icon" style="background:var(--teal-dim);color:var(--teal)"><i class="ti ti-truck" aria-hidden="true"></i></div>
+        <div class="ri-info"><div class="ri-name">DHL Last-Mile EU</div><div class="ri-sub">Distribution · Scope 3 · 890 tCO₂e</div><div class="ri-bar-wrap"><div class="ri-bar" style="width:76%;background:var(--teal)"></div></div></div>
+        <div class="ri-right"><div class="ri-val" style="color:var(--teal)">76</div><div class="ri-score">Low risk</div></div>
+      </div>
+      <div class="row-item" onclick="openCopilot('TSMC Taiwan Tier 1 semiconductor fab scores 71. What renewable energy procurement options exist for semiconductor fabs in Taiwan?')">
+        <div class="ri-icon" style="background:var(--teal-dim);color:var(--teal)"><i class="ti ti-cpu" aria-hidden="true"></i></div>
+        <div class="ri-info"><div class="ri-name">TSMC Fab — Taiwan</div><div class="ri-sub">Semiconductors · Tier 1 · 1,560 tCO₂e</div><div class="ri-bar-wrap"><div class="ri-bar" style="width:71%;background:var(--teal)"></div></div></div>
+        <div class="ri-right"><div class="ri-val" style="color:var(--teal)">71</div><div class="ri-score">Low risk</div></div>
+      </div>
+      <div class="row-item" onclick="openCopilot('Samsung Display Korea scores 48. What are the main emission drivers for OLED panel manufacturing and how can Samsung improve their score?')">
+        <div class="ri-icon" style="background:var(--red-dim);color:var(--red)"><i class="ti ti-device-tv" aria-hidden="true"></i></div>
+        <div class="ri-info"><div class="ri-name">Samsung Display — Korea</div><div class="ri-sub">Displays · Tier 2 · 1,920 tCO₂e</div><div class="ri-bar-wrap"><div class="ri-bar" style="width:48%;background:var(--red)"></div></div></div>
+        <div class="ri-right"><div class="ri-val" style="color:var(--red)">48</div><div class="ri-score">High risk</div></div>
+      </div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:12px">
+      <div class="panel">
+        <div class="panel-hdr"><span class="panel-title">Scope 3 breakdown</span></div>
+        <div class="legend">
+          <div class="legend-item"><div class="legend-dot" style="background:#ff5252"></div>Shipping 42%</div>
+          <div class="legend-item"><div class="legend-dot" style="background:#f5a623"></div>Materials 25%</div>
+          <div class="legend-item"><div class="legend-dot" style="background:#00d4a0"></div>Assembly 15%</div>
+          <div class="legend-item"><div class="legend-dot" style="background:#4fa3ff"></div>Distribution 18%</div>
+        </div>
+        <div style="position:relative;width:100%;height:150px">
+          <canvas id="scope3Chart" role="img" aria-label="Donut chart Scope 3 breakdown: Shipping 42%, Materials 25%, Assembly 15%, Distribution 18%">Shipping 42%, Materials 25%, Assembly 15%, Distribution 18%</canvas>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="panel-hdr"><span class="panel-title">Shipping route comparison</span></div>
+        <div style="position:relative;width:100%;height:120px">
+          <canvas id="routeChart" role="img" aria-label="Bar chart comparing CO2 intensity of shipping routes: SEA-EU 380, US-EU 220, APAC-US 290, EU-local 80">SEA-EU: 380, US-EU: 220, APAC-US: 290, EU-local: 80 kg CO2 per tonne</canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════ INDUSTRIAL PAGE ══════════════════════ -->
+<div class="page-view" id="page-industrial">
+  <div class="page-header">
+    <div><div class="page-title">Industrial Process Emissions</div><div class="page-sub">Scope 1 direct · Combustion · Fugitive · Chemical processes</div></div>
+  </div>
+
+  <div class="score-banner">
+    <div class="score-ring" style="color:var(--red)"><div class="n" style="color:var(--red)">62</div><div class="l">/ 100</div></div>
+    <div class="sb-mid">
+      <h3>Industrial Carbon Score</h3>
+      <p style="color:var(--red)">HIGH RISK · 5 sources flagged above threshold</p>
+      <p style="margin-top:3px">6 industrial process categories contributing 8,340 tCO₂e this quarter</p>
+      <div style="height:5px;background:var(--faint);border-radius:3px;margin-top:8px;width:240px"><div style="width:62%;height:5px;background:var(--red);border-radius:3px"></div></div>
+    </div>
+    <div class="sb-right">
+      <div class="sb-deduct">−38 pts</div>
+      <div class="sb-lbl">total deduction</div>
+      <div class="sb-recover">+22 pts recoverable</div>
+    </div>
+  </div>
+
+  <div class="tabs">
+    <button class="tab active" onclick="switchIndustrialTab('sources')">Sources</button>
+    <button class="tab" onclick="switchIndustrialTab('optimize')">Optimizations</button>
+    <button class="tab" onclick="switchIndustrialTab('scoremodel')">Score Model</button>
+  </div>
+
+  <div class="tab-pane active" id="ind-sources">
+    <div class="g2">
+      <div class="panel">
+        <div class="panel-hdr"><span class="panel-title">All industrial emission sources</span><span class="panel-sub">click for AI analysis</span></div>
+        <div class="row-item" onclick="openCopilot('Explain the carbon impact of high-temperature furnace combustion in detail. What hydrogen or electrification alternatives exist and what is the implementation cost?')">
+          <div class="ri-icon" style="background:var(--red-dim);color:var(--red)"><i class="ti ti-flame" aria-hidden="true"></i></div>
+          <div class="ri-info"><div class="ri-name">High-temp furnace combustion</div><div class="ri-sub">Natural gas · Scope 1 direct</div><div class="ri-bar-wrap"><div class="ri-bar" style="width:90%;background:var(--red)"></div></div></div>
+          <div class="ri-right"><div class="ri-val" style="color:var(--red)">1,840t</div><div class="ri-score">−9 pts</div></div>
+        </div>
+        <div class="row-item" onclick="openCopilot('What CCUS technologies are best suited for cement clinker calcination? What is the cost per tonne of CO2 captured and regulatory incentives available in 2026?')">
+          <div class="ri-icon" style="background:var(--amber-dim);color:var(--amber)"><i class="ti ti-building-factory" aria-hidden="true"></i></div>
+          <div class="ri-info"><div class="ri-name">Cement clinker production</div><div class="ri-sub">CaCO₃ calcination · Chemical</div><div class="ri-bar-wrap"><div class="ri-bar" style="width:74%;background:var(--amber)"></div></div></div>
+          <div class="ri-right"><div class="ri-val" style="color:var(--amber)">1,280t</div><div class="ri-score">−7 pts</div></div>
+        </div>
+        <div class="row-item" onclick="openCopilot('Fugitive methane has 21x GWP of CO2. Recommend IoT sensor and LDAR protocol options to detect and fix valve and flange leaks, with deployment cost estimate.')">
+          <div class="ri-icon" style="background:var(--purple-dim);color:var(--purple)"><i class="ti ti-eye-off" aria-hidden="true"></i></div>
+          <div class="ri-info"><div class="ri-name">Fugitive methane leaks</div><div class="ri-sub">Valves, flanges · 21× GWP</div><div class="ri-bar-wrap"><div class="ri-bar" style="width:60%;background:var(--purple)"></div></div></div>
+          <div class="ri-right"><div class="ri-val" style="color:var(--purple)">890t CO₂e</div><div class="ri-score">−6 pts</div></div>
+        </div>
+        <div class="row-item" onclick="openCopilot('Industrial steam boiler efficiency is at 67%. How can waste heat recovery units and steam trap audits bring this to 82%+ and what are the carbon savings?')">
+          <div class="ri-icon" style="background:var(--amber-dim);color:var(--amber)"><i class="ti ti-droplet" aria-hidden="true"></i></div>
+          <div class="ri-info"><div class="ri-name">Steam boiler inefficiency</div><div class="ri-sub">Coal/gas fired · Scope 1</div><div class="ri-bar-wrap"><div class="ri-bar" style="width:52%;background:var(--amber)"></div></div></div>
+          <div class="ri-right"><div class="ri-val" style="color:var(--amber)">740t</div><div class="ri-score">−5 pts</div></div>
+        </div>
+        <div class="row-item" onclick="openCopilot('Compare electric arc furnace vs blast furnace steel production in terms of carbon emissions. What green power PPA options exist for our EAF operations?')">
+          <div class="ri-icon" style="background:var(--blue-dim);color:var(--blue)"><i class="ti ti-bolt" aria-hidden="true"></i></div>
+          <div class="ri-info"><div class="ri-name">Electric arc furnace (EAF)</div><div class="ri-sub">Steel production · Grid-tied</div><div class="ri-bar-wrap"><div class="ri-bar" style="width:45%;background:var(--blue)"></div></div></div>
+          <div class="ri-right"><div class="ri-val" style="color:var(--blue)">620t</div><div class="ri-score">−5 pts</div></div>
+        </div>
+        <div class="row-item" onclick="openCopilot('R-410A refrigerant has GWP of 2088. Explain the Kigali Amendment phase-out schedule and recommend low-GWP alternatives for our industrial cooling systems.')">
+          <div class="ri-icon" style="background:var(--teal-dim);color:var(--teal)"><i class="ti ti-temperature-snow" aria-hidden="true"></i></div>
+          <div class="ri-info"><div class="ri-name">Refrigerant HFC venting</div><div class="ri-sub">Cooling systems · 1,430× GWP</div><div class="ri-bar-wrap"><div class="ri-bar" style="width:36%;background:var(--teal)"></div></div></div>
+          <div class="ri-right"><div class="ri-val" style="color:var(--teal)">420t CO₂e</div><div class="ri-score">−4 pts</div></div>
+        </div>
+        <div class="row-item" onclick="openCopilot('How do anaerobic digestors reduce methane emissions from industrial wastewater? What is the biogas recovery potential and ROI for our scale of operations?')">
+          <div class="ri-icon" style="background:var(--faint);color:var(--muted)"><i class="ti ti-recycle" aria-hidden="true"></i></div>
+          <div class="ri-info"><div class="ri-name">Wastewater CH₄ emissions</div><div class="ri-sub">Biological decomp · Scope 1</div><div class="ri-bar-wrap"><div class="ri-bar" style="width:22%;background:var(--muted)"></div></div></div>
+          <div class="ri-right"><div class="ri-val" style="color:var(--muted)">280t CO₂e</div><div class="ri-score">−2 pts</div></div>
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:12px">
+        <div class="panel">
+          <div class="panel-hdr"><span class="panel-title">GHG breakdown by type</span></div>
+          <div class="legend">
+            <div class="legend-item"><div class="legend-dot" style="background:#ff5252"></div>CO₂ 62%</div>
+            <div class="legend-item"><div class="legend-dot" style="background:#b08cff"></div>CH₄ eq 23%</div>
+            <div class="legend-item"><div class="legend-dot" style="background:#4fa3ff"></div>HFCs 7%</div>
+            <div class="legend-item"><div class="legend-dot" style="background:#f5a623"></div>N₂O 5%</div>
+            <div class="legend-item"><div class="legend-dot" style="background:#7a9e98"></div>Other 3%</div>
+          </div>
+          <div style="position:relative;width:100%;height:140px">
+            <canvas id="ghgChart" role="img" aria-label="Donut chart GHG breakdown: CO2 62%, CH4 23%, HFCs 7%, N2O 5%, Other 3%">CO2 62%, CH4 23%, HFCs 7%, N2O 5%, Other 3%</canvas>
+          </div>
+        </div>
+        <div class="panel">
+          <div class="panel-hdr"><span class="panel-title">Emission intensity trend</span></div>
+          <div style="position:relative;width:100%;height:120px">
+            <canvas id="intensityChart" role="img" aria-label="Line chart industrial emission intensity per tonne of output: Jan 42, Feb 45, Mar 40, Apr 38, May 41 kg CO2 per tonne output">Jan 42, Feb 45, Mar 40, Apr 38, May 41 kg/t output</canvas>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="tab-pane" id="ind-optimize">
+    <div class="g2">
+      <div>
+        <div class="opt-card">
+          <div class="opt-hdr">
+            <div class="opt-icon" style="background:var(--teal-dim);color:var(--teal)"><i class="ti ti-solar-panel" aria-hidden="true"></i></div>
+            <span class="opt-title">Hydrogen fuel switch — furnaces</span>
+            <span class="opt-badge" style="background:var(--teal-dim);color:var(--teal)">HIGH · +8 pts</span>
+          </div>
+          <div class="opt-desc">Replace natural gas burners with green hydrogen in high-temp furnaces. Eliminates ~95% of combustion CO₂e. Requires onsite H₂ storage and burner retrofits.</div>
+          <div class="opt-stats">
+            <div class="opt-stat">Saves: <span>1,748 tCO₂e/yr</span></div>
+            <div class="opt-stat">Payback: <span>4.2 yrs</span></div>
+            <div class="opt-stat">Confidence: <span>92%</span></div>
+          </div>
+          <button class="opt-btn" onclick="openCopilot('Generate a detailed implementation roadmap for switching our industrial furnaces from natural gas to green hydrogen, including CAPEX, OPEX, timeline, and risk factors.')">Plan this ↗</button>
+        </div>
+        <div class="opt-card">
+          <div class="opt-hdr">
+            <div class="opt-icon" style="background:var(--amber-dim);color:var(--amber)"><i class="ti ti-capture" aria-hidden="true"></i></div>
+            <span class="opt-title">Carbon capture at cement kiln (CCUS)</span>
+            <span class="opt-badge" style="background:var(--teal-dim);color:var(--teal)">HIGH · +6 pts</span>
+          </div>
+          <div class="opt-desc">Post-combustion amine scrubbing on clinker calcination stack. Captures up to 90% of process CO₂ for geological storage or synthetic fuel feedstock.</div>
+          <div class="opt-stats">
+            <div class="opt-stat">Saves: <span>1,152 tCO₂e/yr</span></div>
+            <div class="opt-stat">Payback: <span>6.8 yrs</span></div>
+            <div class="opt-stat">Confidence: <span>84%</span></div>
+          </div>
+          <button class="opt-btn" onclick="openCopilot('What CCUS technologies are best suited for mid-scale cement production in 2026? Include regulatory incentives, EU carbon pricing impact, and vendor landscape.')">Plan this ↗</button>
+        </div>
+        <div class="opt-card">
+          <div class="opt-hdr">
+            <div class="opt-icon" style="background:var(--purple-dim);color:var(--purple)"><i class="ti ti-scan" aria-hidden="true"></i></div>
+            <span class="opt-title">IoT LDAR methane detection mesh</span>
+            <span class="opt-badge" style="background:var(--amber-dim);color:var(--amber)">MED · +5 pts</span>
+          </div>
+          <div class="opt-desc">Deploy acoustic + infrared sensor mesh on all valve, flange, and compressor seals. AI-driven LDAR cuts fugitive methane by up to 72%.</div>
+          <div class="opt-stats">
+            <div class="opt-stat">Saves: <span>641 tCO₂e/yr</span></div>
+            <div class="opt-stat">Payback: <span>1.1 yrs</span></div>
+            <div class="opt-stat">Confidence: <span>96%</span></div>
+          </div>
+          <button class="opt-btn" onclick="openCopilot('Recommend IoT sensor vendors and LDAR protocols for industrial methane leak detection. Include deployment plan, maintenance schedule, and expected detection accuracy.')">Plan this ↗</button>
+        </div>
+      </div>
+      <div>
+        <div class="opt-card">
+          <div class="opt-hdr">
+            <div class="opt-icon" style="background:var(--teal-dim);color:var(--teal)"><i class="ti ti-steam" aria-hidden="true"></i></div>
+            <span class="opt-title">Waste heat recovery + steam trap audit</span>
+            <span class="opt-badge" style="background:var(--amber-dim);color:var(--amber)">MED · +4 pts</span>
+          </div>
+          <div class="opt-desc">Install WHRU on boiler exhaust. Fix steam trap failures — each faulty trap wastes ~30 kg steam/hr. Target 82% efficiency from current 67%.</div>
+          <div class="opt-stats">
+            <div class="opt-stat">Saves: <span>488 tCO₂e/yr</span></div>
+            <div class="opt-stat">Payback: <span>2.3 yrs</span></div>
+            <div class="opt-stat">Confidence: <span>88%</span></div>
+          </div>
+          <button class="opt-btn" onclick="openCopilot('Design a waste heat recovery audit plan for industrial steam boilers including KPIs, contractor specs, and expected efficiency gains.')">Plan this ↗</button>
+        </div>
+        <div class="opt-card">
+          <div class="opt-hdr">
+            <div class="opt-icon" style="background:var(--blue-dim);color:var(--blue)"><i class="ti ti-solar-electricity" aria-hidden="true"></i></div>
+            <span class="opt-title">Green power PPA for EAF operations</span>
+            <span class="opt-badge" style="background:var(--amber-dim);color:var(--amber)">MED · +3 pts</span>
+          </div>
+          <div class="opt-desc">Sign 10-year renewable electricity PPA to decarbonise electric arc furnace loads. Eliminates all Scope 2 grid emissions for steel operations.</div>
+          <div class="opt-stats">
+            <div class="opt-stat">Saves: <span>380 tCO₂e/yr</span></div>
+            <div class="opt-stat">Payback: <span>3.5 yrs</span></div>
+            <div class="opt-stat">Confidence: <span>91%</span></div>
+          </div>
+          <button class="opt-btn" onclick="openCopilot('How do I structure a renewable energy Power Purchase Agreement for heavy industrial EAF operations? Key contract terms, pricing benchmarks, and due diligence checklist.')">Plan this ↗</button>
+        </div>
+        <div class="opt-card">
+          <div class="opt-hdr">
+            <div class="opt-icon" style="background:var(--faint);color:var(--muted)"><i class="ti ti-recycle" aria-hidden="true"></i></div>
+            <span class="opt-title">HFC refrigerant phase-out to R-32</span>
+            <span class="opt-badge" style="background:var(--blue-dim);color:var(--blue)">LOW · +2 pts</span>
+          </div>
+          <div class="opt-desc">Migrate from R-410A (GWP 2,088) to R-32 (GWP 675). Mandatory under Kigali Amendment by 2028.</div>
+          <div class="opt-stats">
+            <div class="opt-stat">Saves: <span>276 tCO₂e/yr</span></div>
+            <div class="opt-stat">Payback: <span>5.0 yrs</span></div>
+            <div class="opt-stat">Confidence: <span>78%</span></div>
+          </div>
+          <button class="opt-btn" onclick="openCopilot('What is the Kigali Amendment HFC phase-out schedule for our region and how do we plan the refrigerant transition? Include equipment compatibility and service requirements.')">Plan this ↗</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="tab-pane" id="ind-scoremodel">
+    <div class="panel">
+      <div class="panel-hdr"><span class="panel-title">Industrial score deduction model</span><span class="panel-sub">base 100 − deductions = industrial score</span></div>
+      <div class="calc-row"><div style="width:14px;height:14px;background:var(--red-dim);border-radius:3px;display:grid;place-items:center;flex-shrink:0"><i class="ti ti-flame" style="font-size:10px;color:var(--red)" aria-hidden="true"></i></div><div class="calc-lbl">Furnace combustion intensity (high-temp, gas-fired)</div><div class="calc-bar-wrap"><div class="calc-bar" style="width:90%;background:var(--red)"></div></div><div class="calc-pts" style="color:var(--red)">−9 pts</div></div>
+      <div class="calc-row"><div style="width:14px;height:14px;background:var(--amber-dim);border-radius:3px;display:grid;place-items:center;flex-shrink:0"><i class="ti ti-building-factory" style="font-size:10px;color:var(--amber)" aria-hidden="true"></i></div><div class="calc-lbl">Cement process CO₂ (calcination ratio)</div><div class="calc-bar-wrap"><div class="calc-bar" style="width:70%;background:var(--amber)"></div></div><div class="calc-pts" style="color:var(--amber)">−7 pts</div></div>
+      <div class="calc-row"><div style="width:14px;height:14px;background:var(--purple-dim);border-radius:3px;display:grid;place-items:center;flex-shrink:0"><i class="ti ti-eye-off" style="font-size:10px;color:var(--purple)" aria-hidden="true"></i></div><div class="calc-lbl">Fugitive methane emission rate (GWP-adjusted)</div><div class="calc-bar-wrap"><div class="calc-bar" style="width:60%;background:var(--purple)"></div></div><div class="calc-pts" style="color:var(--purple)">−6 pts</div></div>
+      <div class="calc-row"><div style="width:14px;height:14px;background:var(--amber-dim);border-radius:3px;display:grid;place-items:center;flex-shrink:0"><i class="ti ti-droplet" style="font-size:10px;color:var(--amber)" aria-hidden="true"></i></div><div class="calc-lbl">Boiler thermal efficiency gap (vs 85% benchmark)</div><div class="calc-bar-wrap"><div class="calc-bar" style="width:50%;background:var(--amber)"></div></div><div class="calc-pts" style="color:var(--amber)">−5 pts</div></div>
+      <div class="calc-row"><div style="width:14px;height:14px;background:var(--blue-dim);border-radius:3px;display:grid;place-items:center;flex-shrink:0"><i class="ti ti-bolt" style="font-size:10px;color:var(--blue)" aria-hidden="true"></i></div><div class="calc-lbl">EAF grid carbon intensity (gCO₂/kWh)</div><div class="calc-bar-wrap"><div class="calc-bar" style="width:50%;background:var(--blue)"></div></div><div class="calc-pts" style="color:var(--blue)">−5 pts</div></div>
+      <div class="calc-row"><div style="width:14px;height:14px;background:var(--teal-dim);border-radius:3px;display:grid;place-items:center;flex-shrink:0"><i class="ti ti-temperature-snow" style="font-size:10px;color:var(--teal)" aria-hidden="true"></i></div><div class="calc-lbl">Refrigerant GWP index (fleet-weighted)</div><div class="calc-bar-wrap"><div class="calc-bar" style="width:40%;background:var(--teal)"></div></div><div class="calc-pts" style="color:var(--teal)">−4 pts</div></div>
+      <div class="calc-row"><div style="width:14px;height:14px;background:var(--faint);border-radius:3px;display:grid;place-items:center;flex-shrink:0"><i class="ti ti-recycle" style="font-size:10px;color:var(--muted)" aria-hidden="true"></i></div><div class="calc-lbl">Wastewater CH₄ capture rate (vs 90% target)</div><div class="calc-bar-wrap"><div class="calc-bar" style="width:20%;background:var(--muted)"></div></div><div class="calc-pts" style="color:var(--muted)">−2 pts</div></div>
+      <div class="calc-row" style="border-top:2px solid var(--faint);margin-top:6px;padding-top:10px">
+        <div class="calc-lbl" style="font-size:12px;font-weight:700;color:#fff">Industrial Carbon Score</div>
+        <div style="flex:1"></div>
+        <div class="calc-pts" style="color:var(--red);font-size:18px;font-weight:800;width:auto">62 / 100</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════ SIMULATE PAGE ══════════════════════ -->
+<div class="page-view" id="page-simulate">
+  <div class="page-header">
+    <div><div class="page-title">Impact Simulator</div><div class="page-sub">Toggle optimizations across supply chain and industrial to project unified score recovery</div></div>
+  </div>
+  <div class="g2">
+    <div class="panel">
+      <div class="panel-hdr"><span class="panel-title">Supply chain optimizations</span><span class="panel-sub">click to toggle</span></div>
+      <label class="sim-check"><input type="checkbox" id="s1" onchange="updateSim()"> Reroute Maersk SEA→EU via shorter path <span class="sim-tag">+4 pts · 340 tCO₂e</span></label>
+      <label class="sim-check"><input type="checkbox" id="s2" onchange="updateSim()"> Switch Vale Mining to certified green supplier <span class="sim-tag">+3 pts · 480 tCO₂e</span></label>
+      <label class="sim-check"><input type="checkbox" id="s3" onchange="updateSim()"> EV fleet conversion for DHL last-mile <span class="sim-tag">+2 pts · 180 tCO₂e</span></label>
+      <label class="sim-check"><input type="checkbox" id="s4" onchange="updateSim()"> Green energy procurement at Foxconn <span class="sim-tag">+1 pt · 90 tCO₂e</span></label>
+      <div class="section-div" style="margin:12px 0 8px"><div class="section-div-line"></div><div class="section-div-label">Industrial</div><div class="section-div-line"></div></div>
+      <label class="sim-check"><input type="checkbox" id="i1" onchange="updateSim()"> Hydrogen fuel switch for furnaces <span class="sim-tag">+8 pts · 1,748 tCO₂e</span></label>
+      <label class="sim-check"><input type="checkbox" id="i2" onchange="updateSim()"> CCUS at cement kiln <span class="sim-tag">+6 pts · 1,152 tCO₂e</span></label>
+      <label class="sim-check"><input type="checkbox" id="i3" onchange="updateSim()"> IoT LDAR methane detection <span class="sim-tag">+5 pts · 641 tCO₂e</span></label>
+      <label class="sim-check"><input type="checkbox" id="i4" onchange="updateSim()"> Boiler heat recovery system <span class="sim-tag">+4 pts · 488 tCO₂e</span></label>
+      <label class="sim-check"><input type="checkbox" id="i5" onchange="updateSim()"> Green PPA for EAF operations <span class="sim-tag">+3 pts · 380 tCO₂e</span></label>
+      <label class="sim-check"><input type="checkbox" id="i6" onchange="updateSim()"> HFC refrigerant phase-out to R-32 <span class="sim-tag">+2 pts · 276 tCO₂e</span></label>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:12px">
+      <div class="panel" style="flex:1">
+        <div class="panel-hdr"><span class="panel-title">Projected outcome</span></div>
+        <div style="text-align:center;padding:10px 0">
+          <div style="font-family:var(--mono);font-size:10px;color:var(--muted);margin-bottom:6px;text-transform:uppercase;letter-spacing:.8px">unified score</div>
+          <div id="simScore" style="font-size:56px;font-weight:800;color:var(--red);transition:color .3s,font-size .2s">74</div>
+          <div style="font-family:var(--mono);font-size:11px;color:var(--muted)">/100</div>
+          <div style="width:80%;margin:12px auto;background:var(--faint);border-radius:4px;height:8px">
+            <div id="simBar" style="height:8px;border-radius:4px;background:var(--red);width:74%;transition:all .5s ease"></div>
+          </div>
+        </div>
+        <div class="g2" style="margin-bottom:0">
+          <div style="text-align:center">
+            <div style="font-family:var(--mono);font-size:9px;color:var(--muted)">CO₂e saved/yr</div>
+            <div id="simSaved" style="font-size:18px;font-weight:800;color:var(--teal)">0 t</div>
+          </div>
+          <div style="text-align:center">
+            <div style="font-family:var(--mono);font-size:9px;color:var(--muted)">Points recovered</div>
+            <div id="simPts" style="font-size:18px;font-weight:800;color:var(--teal)">+0</div>
+          </div>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="panel-hdr"><span class="panel-title">Score composition</span></div>
+        <div style="position:relative;width:100%;height:150px">
+          <canvas id="simChart" role="img" aria-label="Bar chart showing current vs projected supply chain and industrial scores">Current and projected scores for supply chain and industrial categories.</canvas>
+        </div>
+      </div>
+      <button style="background:var(--teal);color:var(--ink);font-weight:800;font-size:12px;border:none;border-radius:6px;padding:12px;width:100%;letter-spacing:.3px;transition:opacity .15s" onclick="commitSim()" onmouseover="this.style.opacity='.85'" onmouseout="this.style.opacity='1'">Commit to Plan & Generate Roadmap ↗</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════ ALERTS PAGE ══════════════════════ -->
+<div class="page-view" id="page-alerts">
+  <div class="page-header"><div><div class="page-title">Predictive Risk Alerts</div><div class="page-sub">AI-generated · Cross-module · Regulatory + Operational</div></div></div>
+  <div class="panel">
+    <div class="alert-item">
+      <div class="ai-icon" style="background:var(--red-dim);color:var(--red);width:32px;height:32px"><i class="ti ti-flame" aria-hidden="true"></i></div>
+      <div style="flex:1"><div class="ai-text" style="font-size:12px;color:#dff0ec">Maersk SEA→EU route CO₂ intensity is 2.3× above threshold. Rerouting via Suez saves est. 340 tCO₂e and recovers +4 pts on supply chain score.</div><div class="ai-time">2 min ago · Supply Chain · High confidence 94%</div></div>
+      <button class="opt-btn" onclick="openCopilot('Provide 3 detailed Maersk SEA to EU rerouting options with CO2 savings, cost delta, and transit time for each.')">Fix ↗</button>
+    </div>
+    <div class="alert-item">
+      <div class="ai-icon" style="background:var(--red-dim);color:var(--red);width:32px;height:32px"><i class="ti ti-building-factory" aria-hidden="true"></i></div>
+      <div style="flex:1"><div class="ai-text" style="font-size:12px;color:#dff0ec">Furnace combustion intensity running 40% above Q1 target. Contributing 1,840 tCO₂e this quarter — largest single industrial source. Deducting −9 pts.</div><div class="ai-time">18 min ago · Industrial Process · Critical</div></div>
+      <button class="opt-btn" onclick="openCopilot('Our furnace combustion is 40% above target. What are the fastest-to-implement interventions to reduce intensity within this quarter?')">Fix ↗</button>
+    </div>
+    <div class="alert-item">
+      <div class="ai-icon" style="background:var(--amber-dim);color:var(--amber);width:32px;height:32px"><i class="ti ti-pick" aria-hidden="true"></i></div>
+      <div style="flex:1"><div class="ai-text" style="font-size:12px;color:#dff0ec">Vale Carajás energy mix is 68% coal. A certified green alternative supplier is available in Q3 with estimated 480 tCO₂e annual reduction.</div><div class="ai-time">1 hr ago · Supply Chain · Medium confidence</div></div>
+      <button class="opt-btn" onclick="openCopilot('Which certified green mining suppliers can replace Vale Carajas for our raw materials sourcing in Q3 2026? Compare price, certifications, and lead times.')">Fix ↗</button>
+    </div>
+    <div class="alert-item">
+      <div class="ai-icon" style="background:var(--amber-dim);color:var(--amber);width:32px;height:32px"><i class="ti ti-eye-off" aria-hidden="true"></i></div>
+      <div style="flex:1"><div class="ai-text" style="font-size:12px;color:#dff0ec">Fugitive methane sensor at Zone 4B compressor station offline for 6 hours. Manual inspection required. Unmonitored period may have unrecorded emissions.</div><div class="ai-time">3 hr ago · Industrial Process · Action required</div></div>
+      <button class="opt-btn" onclick="openCopilot('Sensor at Zone 4B compressor offline for 6 hours. How should we handle unmonitored emissions in our carbon accounting and what is the regulatory reporting requirement?')">Fix ↗</button>
+    </div>
+    <div class="alert-item">
+      <div class="ai-icon" style="background:var(--blue-dim);color:var(--blue);width:32px;height:32px"><i class="ti ti-file-certificate" aria-hidden="true"></i></div>
+      <div style="flex:1"><div class="ai-text" style="font-size:12px;color:#dff0ec">EU CSRD deadline in 47 days. 3 Tier-2 suppliers (Vale, Samsung Display, logistics partner BR-04) missing verified emissions data required for audit submission.</div><div class="ai-time">4 hr ago · Regulatory · Deadline approaching</div></div>
+      <button class="opt-btn" onclick="openCopilot('We have 47 days to CSRD deadline. 3 Tier-2 suppliers have missing verified emissions data. What is the fastest compliant path to gather and verify this data?')">Fix ↗</button>
+    </div>
+  </div>
+</div>
+
+<!-- OTHER STUBS -->
+<div class="page-view" id="page-shipping">
+  <div class="page-header"><div><div class="page-title">Shipping Routes</div><div class="page-sub">Route optimization · CO₂ intensity · Alternative path analysis</div></div></div>
+  <div class="panel"><div class="panel-hdr"><span class="panel-title">Route intelligence</span></div><div style="font-family:var(--mono);font-size:12px;color:var(--muted);padding:20px 0;text-align:center">Select a route from the Supply Chain Nodes page to analyze.<br/><br/><button class="opt-btn" style="display:inline-block" onclick="openCopilot('Analyze all our active shipping routes by CO2 intensity and recommend the top 3 rerouting opportunities with estimated annual savings.')">Ask Copilot to analyze all routes ↗</button></div></div>
+</div>
+<div class="page-view" id="page-predictions">
+  <div class="page-header"><div><div class="page-title">ML Predictions</div><div class="page-sub">XGBoost carbon footprint model · Lifecycle analysis · Risk forecasting</div></div></div>
+  <div class="panel"><div style="position:relative;width:100%;height:260px"><canvas id="predChart" role="img" aria-label="Extended 6-month emissions forecast combining supply chain and industrial sources">6-month emissions forecast data.</canvas></div></div>
+</div>
+<div class="page-view" id="page-compliance">
+  <div class="page-header"><div><div class="page-title">Blockchain Ledger</div><div class="page-sub">Immutable carbon records · Polygon L2 · Tamper-proof Sustainability NFTs</div></div></div>
+  <div class="panel">
+    <div style="margin-bottom:12px;font-family:var(--mono);font-size:10px;color:var(--muted)">Network: Polygon L2 · 48 NFTs minted · 3,200 tCO₂e locked · Last block <span style="color:var(--teal)">#4,182,931</span></div>
+    <div class="bc-row"><div class="bc-nft"><i class="ti ti-coin" style="color:var(--teal);font-size:13px" aria-hidden="true"></i></div><div style="flex:1;min-width:0"><div class="bc-hash">0x3f9a2b1d…c21e</div><div style="color:var(--muted);font-size:9px">Batch #4821 · 240 tCO₂e · Supply Chain · May 28 14:02 UTC</div></div><div class="bc-tag verified">VERIFIED</div></div>
+    <div class="bc-row"><div class="bc-nft"><i class="ti ti-coin" style="color:var(--teal);font-size:13px" aria-hidden="true"></i></div><div style="flex:1;min-width:0"><div class="bc-hash">0x8b2d4f9a…f50a</div><div style="color:var(--muted);font-size:9px">Batch #4820 · 188 tCO₂e · Industrial Furnace · May 28 13:41 UTC</div></div><div class="bc-tag verified">VERIFIED</div></div>
+    <div class="bc-row"><div class="bc-nft"><i class="ti ti-coin" style="color:var(--amber);font-size:13px" aria-hidden="true"></i></div><div style="flex:1;min-width:0"><div class="bc-hash" style="color:var(--amber)">0x1c7f3e2b…9d3b</div><div style="color:var(--muted);font-size:9px">Batch #4819 · 312 tCO₂e · Cement Process · May 28 12:18 UTC</div></div><div class="bc-tag pending">PENDING</div></div>
+    <div class="bc-row"><div class="bc-nft"><i class="ti ti-coin" style="color:var(--teal);font-size:13px" aria-hidden="true"></i></div><div style="flex:1;min-width:0"><div class="bc-hash">0x6d1e8c4f…a72d</div><div style="color:var(--muted);font-size:9px">Batch #4818 · 156 tCO₂e · Maersk SEA-EU · May 28 11:55 UTC</div></div><div class="bc-tag verified">VERIFIED</div></div>
+  </div>
+</div>
+<div class="page-view" id="page-optimize">
+  <div class="page-header"><div><div class="page-title">All Optimizations</div><div class="page-sub">Cross-module · Supply Chain + Industrial · Ranked by impact</div></div></div>
+  <div class="panel"><div style="font-family:var(--mono);font-size:12px;color:var(--muted);padding:10px 0">See detailed optimization cards in <button class="panel-action" onclick="showPage('industrial');switchIndustrialTab('optimize')">Industrial → Optimizations</button> or use the Simulator to model combined impact.</div></div>
+</div>
+
+</main>
+</div>
+
+<!-- COPILOT BAR -->
+<div class="copilot-bar" id="copilotBar" style="grid-column:1/-1">
+  <div class="copilot-label"><i class="ti ti-robot" aria-hidden="true"></i>AI COPILOT</div>
+  <input class="copilot-input" id="copilotInput" placeholder="Ask: 'How can we reduce shipping emissions by 15%?' · 'Which industrial process has highest ROI to fix?' · 'Generate CSRD report draft'" />
+  <button class="btn-ask" onclick="handleCopilot()">Ask AI ↗</button>
+</div>
+</div>
+
+<script>
+// ── PAGE NAVIGATION ──
+function showPage(id){
+  document.querySelectorAll('.page-view').forEach(p=>p.classList.remove('active'));
+  document.getElementById('page-'+id).classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  const map={overview:0,supply:1,shipping:2,industrial:3,optimize:4,predictions:5,compliance:6,alerts:7,simulate:8};
+  const items=document.querySelectorAll('.nav-item');
+  if(map[id]!==undefined && items[map[id]]) items[map[id]].classList.add('active');
+}
+
+// ── INDUSTRIAL TABS ──
+function switchIndustrialTab(id){
+  document.querySelectorAll('.tab').forEach((t,i)=>{
+    const ids=['sources','optimize','scoremodel'];
+    t.classList.toggle('active',ids[i]===id);
+  });
+  document.querySelectorAll('.tab-pane').forEach(p=>{
+    p.classList.toggle('active',p.id==='ind-'+id);
+  });
+}
+
+// ── COPILOT ──
+function openCopilot(msg){
+  document.getElementById('copilotInput').value=msg;
+  document.getElementById('copilotInput').focus();
+}
+function handleCopilot(){
+  const q=document.getElementById('copilotInput').value.trim();
+  if(!q)return;
+  document.getElementById('copilotInput').value='';
+  // trigger chat
+  if(typeof sendPrompt==='function') sendPrompt(q);
+}
+document.getElementById('copilotInput').addEventListener('keydown',e=>{if(e.key==='Enter')handleCopilot();});
+
+// ── CHARTS ──
+const CH={responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{backgroundColor:'#131d1a',borderColor:'rgba(255,255,255,.1)',borderWidth:1,titleColor:'#7a9e98',bodyColor:'#dff0ec',titleFont:{family:'IBM Plex Mono',size:9},bodyFont:{family:'IBM Plex Mono',size:10}}}};
+const ticks={color:'#7a9e98',font:{family:'IBM Plex Mono',size:9}};
+const grid={color:'rgba(255,255,255,.05)'};
+
+// Forecast chart
+new Chart(document.getElementById('forecastChart'),{
+  type:'line',
+  data:{
+    labels:['Jan','Feb','Mar','Apr','May','Jun'],
+    datasets:[
+      {label:'Supply Chain',data:[2100,2300,2050,1980,2100,null],borderColor:'#00d4a0',borderWidth:2,pointBackgroundColor:'#00d4a0',pointRadius:3,tension:.4,fill:false},
+      {label:'Industrial',data:[1450,1500,1380,1420,1380,null],borderColor:'#ff5252',borderWidth:2,pointBackgroundColor:'#ff5252',pointRadius:3,tension:.4,fill:false},
+      {label:'Forecast',data:[null,null,null,null,3480,3700],borderColor:'#f5a623',borderWidth:2,borderDash:[5,4],pointBackgroundColor:'#f5a623',pointRadius:3,tension:.4,fill:false}
+    ]
+  },
+  options:{...CH,scales:{x:{grid,ticks},y:{grid,ticks:{...ticks,callback:v=>v>=1000?(v/1000).toFixed(1)+'k':v}}}}
+});
+
+// Scope donut
+new Chart(document.getElementById('scopeChart'),{
+  type:'doughnut',
+  data:{labels:['Scope 1','Scope 2','S3 Shipping','S3 Materials','Industrial'],datasets:[{data:[12,15,33,20,20],backgroundColor:['#00d4a0','#4fa3ff','#ff5252','#f5a623','#b08cff'],borderWidth:0}]},
+  options:{...CH,cutout:'65%'}
+});
+
+// Deduct chart on overview
+new Chart(document.getElementById('deductChart'),{
+  type:'bar',
+  data:{labels:['Furnace','Cement','Fugitive','Boiler','EAF','Refrig.','Waste'],datasets:[{data:[9,7,6,5,5,4,2],backgroundColor:['#ff5252','#f5a623','#b08cff','#f5a623','#4fa3ff','#00d4a0','#7a9e98'],borderRadius:3,borderWidth:0}]},
+  options:{...CH,indexAxis:'y',scales:{x:{grid,ticks:{...ticks,callback:v=>v+'pt'}},y:{grid:{display:false},ticks}}}
+});
+
+// Supply scope3
+new Chart(document.getElementById('scope3Chart'),{
+  type:'doughnut',
+  data:{labels:['Shipping','Materials','Assembly','Distribution'],datasets:[{data:[42,25,15,18],backgroundColor:['#ff5252','#f5a623','#00d4a0','#4fa3ff'],borderWidth:0}]},
+  options:{...CH,cutout:'65%'}
+});
+
+// Route comparison
+new Chart(document.getElementById('routeChart'),{
+  type:'bar',
+  data:{labels:['SEA→EU','US→EU','APAC→US','EU Local'],datasets:[{data:[380,220,290,80],backgroundColor:['#ff5252','#f5a623','#f5a623','#00d4a0'],borderRadius:3,borderWidth:0}]},
+  options:{...CH,scales:{x:{grid:{display:false},ticks},y:{grid,ticks:{...ticks,callback:v=>v+'kg/t'}}},plugins:{...CH.plugins,tooltip:{...CH.plugins.tooltip,callbacks:{label:v=>v.raw+' kg CO₂e per tonne·km'}}}}
+});
+
+// GHG donut industrial
+new Chart(document.getElementById('ghgChart'),{
+  type:'doughnut',
+  data:{labels:['CO₂','CH₄ eq','HFCs','N₂O','Other'],datasets:[{data:[62,23,7,5,3],backgroundColor:['#ff5252','#b08cff','#4fa3ff','#f5a623','#7a9e98'],borderWidth:0}]},
+  options:{...CH,cutout:'65%'}
+});
+
+// Intensity line
+new Chart(document.getElementById('intensityChart'),{
+  type:'line',
+  data:{labels:['Jan','Feb','Mar','Apr','May'],datasets:[{data:[42,45,40,38,41],borderColor:'#b08cff',borderWidth:2,pointBackgroundColor:'#b08cff',pointRadius:3,tension:.4,fill:false}]},
+  options:{...CH,scales:{x:{grid,ticks},y:{grid,ticks:{...ticks,callback:v=>v+'kg/t'}}}}
+});
+
+// Predictions extended
+new Chart(document.getElementById('predChart'),{
+  type:'line',
+  data:{
+    labels:['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug'],
+    datasets:[
+      {label:'SC Actual',data:[2100,2300,2050,1980,2100,null,null,null],borderColor:'#00d4a0',borderWidth:2,pointRadius:3,tension:.4,fill:false},
+      {label:'Ind Actual',data:[1450,1500,1380,1420,1380,null,null,null],borderColor:'#ff5252',borderWidth:2,pointRadius:3,tension:.4,fill:false},
+      {label:'Combined Forecast',data:[null,null,null,null,3480,3700,3550,3400],borderColor:'#f5a623',borderWidth:2,borderDash:[5,4],pointRadius:3,tension:.4,fill:false}
+    ]
+  },
+  options:{...CH,plugins:{legend:{display:true,labels:{color:'#7a9e98',font:{family:'IBM Plex Mono',size:9},boxWidth:8,boxHeight:8}},tooltip:CH.plugins.tooltip},scales:{x:{grid,ticks},y:{grid,ticks:{...ticks,callback:v=>v>=1000?(v/1000).toFixed(1)+'k':v}}}}
+});
+
+// ── SIMULATOR ──
+let simChart;
+function initSimChart(){
+  simChart=new Chart(document.getElementById('simChart'),{
+    type:'bar',
+    data:{
+      labels:['Supply Chain','Industrial','Unified'],
+      datasets:[
+        {label:'Current',data:[84,62,74],backgroundColor:'rgba(255,82,82,.5)',borderRadius:3,borderWidth:0},
+        {label:'Projected',data:[84,62,74],backgroundColor:['#00d4a0','#00d4a0','#00d4a0'],borderRadius:3,borderWidth:0}
+      ]
+    },
+    options:{...CH,plugins:{legend:{display:false}},scales:{x:{grid:{display:false},ticks},y:{grid,ticks,min:0,max:100}}}
+  });
+}
+initSimChart();
+
+const SIM_OPT=[
+  {id:'s1',pts:4,co2:340,scope:'supply'},
+  {id:'s2',pts:3,co2:480,scope:'supply'},
+  {id:'s3',pts:2,co2:180,scope:'supply'},
+  {id:'s4',pts:1,co2:90,scope:'supply'},
+  {id:'i1',pts:8,co2:1748,scope:'industrial'},
+  {id:'i2',pts:6,co2:1152,scope:'industrial'},
+  {id:'i3',pts:5,co2:641,scope:'industrial'},
+  {id:'i4',pts:4,co2:488,scope:'industrial'},
+  {id:'i5',pts:3,co2:380,scope:'industrial'},
+  {id:'i6',pts:2,co2:276,scope:'industrial'},
+];
+
+function updateSim(){
+  let sRec=0,iRec=0,co2=0;
+  SIM_OPT.forEach(o=>{
+    const el=document.getElementById(o.id);
+    if(el&&el.checked){
+      if(o.scope==='supply')sRec+=o.pts; else iRec+=o.pts;
+      co2+=o.co2;
+    }
+  });
+  const scScore=Math.min(100,84+sRec);
+  const indScore=Math.min(100,62+iRec);
+  const unified=Math.round((scScore+indScore)/2);
+  document.getElementById('simScore').textContent=unified;
+  document.getElementById('simBar').style.width=unified+'%';
+  document.getElementById('simSaved').textContent=co2.toLocaleString()+' t';
+  document.getElementById('simPts').textContent='+'+(sRec+iRec);
+  const scoreEl=document.getElementById('simScore');
+  const barEl=document.getElementById('simBar');
+  const col=unified>=85?'#00d4a0':unified>=75?'#f5a623':'#ff5252';
+  scoreEl.style.color=col; barEl.style.background=col;
+  // update sidebar
+  document.getElementById('sidebar-score').textContent=unified;
+  document.getElementById('sidebar-bar').style.width=unified+'%';
+  document.getElementById('master-score').textContent=unified;
+  document.getElementById('master-bar').style.width=unified+'%';
+  document.getElementById('master-bar').style.background=col;
+  // update sim chart
+  if(simChart){
+    simChart.data.datasets[1].data=[scScore,indScore,unified];
+    simChart.update();
+  }
+}
+
+function commitSim(){
+  const selected=SIM_OPT.filter(o=>{const el=document.getElementById(o.id);return el&&el.checked;});
+  if(!selected.length){
+    openCopilot('Generate a full decarbonization plan covering all supply chain and industrial optimizations for EcoTrace AI with a quarterly roadmap and KPIs.');
+    return;
+  }
+  const names={s1:'Maersk rerouting',s2:'Green mining supplier switch',s3:'DHL EV fleet conversion',s4:'Foxconn renewable energy',i1:'Hydrogen furnace switch',i2:'Cement CCUS',i3:'IoT LDAR methane detection',i4:'Boiler heat recovery',i5:'Green PPA for EAF',i6:'HFC refrigerant phase-out'};
+  const list=selected.map(o=>names[o.id]).join(', ');
+  openCopilot('Create a detailed quarterly implementation roadmap for these optimizations: '+list+'. Include KPIs, CAPEX estimates, responsible teams, risk factors, and blockchain verification milestones for each.');
+}
+</script>
+</body>
+</html>
